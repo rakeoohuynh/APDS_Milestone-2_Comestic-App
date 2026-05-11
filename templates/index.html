@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beauty Shop</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <header class="hero">
+        <div class="hero-inner">
+            <h1 class="logo">Beauty<span>Shop</span></h1>
+            <p class="tagline">Discover premium cosmetics from top brands</p>
+            <form class="search-form" action="/" method="GET">
+                <input
+                    type="text"
+                    name="search_box"
+                    placeholder="Search products or brands..."
+                    value="{{ last_search }}"
+                    autocomplete="off"
+                >
+                <button type="submit">Search</button>
+            </form>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="results-bar">
+            {% if last_search %}
+                <span>Results for "<strong>{{ last_search }}</strong>" &mdash; {{ products|length }} product(s) found</span>
+                <a href="/" class="clear-link">Clear search</a>
+            {% else %}
+                <span>All Products &mdash; <strong>{{ products|length }}</strong> items</span>
+            {% endif %}
+        </div>
+
+        {% if products %}
+            <div class="product-grid">
+                {% for item in products %}
+                <a class="product-card" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">
+                    <div class="card-badge">{{ item.brand }}</div>
+                    <div class="card-body">
+                        <h3 class="card-title">{{ item.name }}</h3>
+                        <div class="card-meta">
+                            <div class="rating">
+                                <span class="stars">
+                                    {% set full = item.rating | int %}
+                                    {% for i in range(5) %}
+                                        {% if i < full %}&#9733;{% else %}&#9734;{% endif %}
+                                    {% endfor %}
+                                </span>
+                                <span class="rating-val">{{ item.rating }} ({{ item.rating_count }})</span>
+                            </div>
+                            <div class="price">&#8377;{{ item.price }}</div>
+                        </div>
+                        {% if item.tags %}
+                            <span class="tag">{{ item.tags }}</span>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>No products found for "<strong>{{ last_search }}</strong>".</p>
+                <a href="/" class="clear-link">Browse all products</a>
+            </div>
+        {% endif %}
+    </main>
+
+    <footer class="footer">
+        <p>Beauty Shop &copy; 2025 &mdash; Powered by Nykaa data</p>
+    </footer>
+
+</body>
+</html>
