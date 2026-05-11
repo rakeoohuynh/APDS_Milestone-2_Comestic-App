@@ -49,7 +49,7 @@
         {% for item in products %}
         <a class="product-card" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">
             <div class="card-img-wrap">
-                <img src="{{ item.image }}" alt="{{ item.name }}" loading="lazy">
+                <img src="{{ url_for('static', filename=item.image) }}" alt="{{ item.name }}" loading="lazy">
                 <span class="brand-badge">{{ item.brand }}</span>
             </div>
             <div class="card-body">

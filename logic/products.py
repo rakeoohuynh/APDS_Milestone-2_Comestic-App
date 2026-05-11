@@ -3,6 +3,15 @@ import os
 import re
 
 _PRODUCTS = None
+_IMAGES_DIR = os.path.join(os.path.dirname(__file__), '..', 'static', 'images')
+_SUPPORTED_EXTS = ('.jpg', '.jpeg', '.png', '.webp', '.svg')
+
+def _get_image(pid):
+    """Return 'images/{pid}.ext' if a matching file exists, else the placeholder."""
+    for ext in _SUPPORTED_EXTS:
+        if os.path.isfile(os.path.join(_IMAGES_DIR, f'{pid}{ext}')):
+            return f'images/{pid}{ext}'
+    return 'images/placeholder.svg'
 
 def _load_products():
     global _PRODUCTS
@@ -45,7 +54,7 @@ def _load_products():
                     'rating': rating,
                     'rating_count': rating_count,
                     'url': row['product_url'].strip(),
-                    'image': f'https://picsum.photos/seed/{pid}/300/200',
+                    'image': _get_image(pid),
                 })
 
     _PRODUCTS = products
