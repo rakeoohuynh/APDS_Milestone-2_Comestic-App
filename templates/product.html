@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} — Beauty Shop</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- ── Header ───────────────────────────────────────── -->
+<header class="hero hero--slim">
+    <div class="hero-inner">
+        <a href="/" class="logo">Beauty<span>Shop</span></a>
+    </div>
+</header>
+
+<!-- ── Main ─────────────────────────────────────────── -->
+<main class="main-content">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="/">Home</a>
+        <span>&rsaquo;</span>
+        <span>{{ product.brand }}</span>
+        <span>&rsaquo;</span>
+        <span class="breadcrumb-current">{{ product.name }}</span>
+    </nav>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash flash--{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- ── Product detail ─────────────────────────── -->
+    <section class="detail-section">
+        <div class="detail-img-wrap">
+            <img src="{{ url_for('static', filename=product.image) }}" alt="{{ product.name }}">
+        </div>
+
+        <div class="detail-info">
+            <span class="detail-brand">{{ product.brand }}</span>
+            <h1 class="detail-title">{{ product.name }}</h1>
+
+            <div class="detail-rating">
+                {% set full = product.rating | int %}
+                {% for i in range(5) %}
+                    <span class="{{ 'star-full' if i < full else 'star-empty' }}">&#9733;</span>
+                {% endfor %}
+                <span class="detail-rating-val">{{ product.rating }} / 5</span>
+                <span class="detail-rating-count">({{ product.rating_count }} reviews)</span>
+            </div>
+
+            <div class="detail-price">&#8377;{{ product.price }}</div>
+
+            {% if product.tags %}
+            <span class="detail-tag">{{ product.tags }}</span>
+            {% endif %}
+
+            <p class="detail-desc">{{ product.description }}</p>
+        </div>
+    </section>
+
+    <!-- ── Reviews ────────────────────────────────── -->
+    <section class="reviews-section">
+        <div class="reviews-header">
+            <h2>Customer Reviews <span class="reviews-count">({{ reviews|length }})</span></h2>
+            <button class="btn-add-review" onclick="toggleReviewForm()">&#43; Add Review</button>
+        </div>
+
+        <!-- Add Review Form (hidden by default) -->
+        <div class="review-form-wrap" id="reviewForm" style="display:none;">
+            <h3 class="form-title">Write a Review</h3>
+            <form action="/product/{{ product.id }}/review" method="POST" class="review-form">
+
+                <div class="form-group">
+                    <label for="author">Your Name</label>
+                    <input type="text" id="author" name="author" placeholder="Enter your name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Rating</label>
+                    <div class="star-picker">
+                        {% for val in [1,2,3,4,5] %}
+                        <input type="radio" id="star{{ val }}" name="rating" value="{{ val }}" required>
+                        <label for="star{{ val }}" title="{{ val }} star{{ 's' if val > 1 }}">&#9733;</label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="review_title">Review Title</label>
+                    <input type="text" id="review_title" name="review_title" placeholder="Summarise your experience" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="review_text">Review</label>
+                    <textarea id="review_text" name="review_text" rows="4" placeholder="Tell us what you think..." required></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">Submit Review</button>
+                    <button type="button" class="btn-cancel" onclick="toggleReviewForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Review list -->
+        {% if reviews %}
+        <div class="review-list">
+            {% for r in reviews %}
+            <div class="review-card">
+                <div class="review-meta">
+                    <div class="review-stars">
+                        {% set rfull = r.rating | int %}
+                        {% for i in range(5) %}
+                            <span class="{{ 'star-full' if i < rfull else 'star-empty' }}">&#9733;</span>
+                        {% endfor %}
+                    </div>
+                    <span class="review-author">{{ r.author }}</span>
+                    <span class="review-date">{{ r.date }}</span>
+                    {% if r.is_buyer %}
+                    <span class="verified-badge">&#10003; Verified Buyer</span>
+                    {% endif %}
+                </div>
+                <h4 class="review-title">{{ r.title }}</h4>
+                <p class="review-text">{{ r.text }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="no-reviews">No reviews yet. Be the first to review this product!</p>
+        {% endif %}
+    </section>
+
+</main>
+
+<!-- ── Footer ───────────────────────────────────────── -->
+<footer class="footer">
+    <p>Beauty Shop &copy; 2025 &mdash; Powered by Nykaa data</p>
+</footer>
+
+<script>
+function toggleReviewForm() {
+    const form = document.getElementById('reviewForm');
+    const btn  = document.querySelector('.btn-add-review');
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        btn.textContent = '✕ Close';
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        form.style.display = 'none';
+        btn.textContent = '+ Add Review';
+    }
+}
+</script>
+
+</body>
+</html>
