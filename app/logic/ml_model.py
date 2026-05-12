@@ -22,11 +22,9 @@ def build_models():
     global tfidf, lr_model, rf_model
 
     if TFIDF_PATH.exists() and LR_PATH.exists() and RF_PATH.exists():
-        print("⌛ Đang tải models từ file .pkl...")
         tfidf = joblib.load(TFIDF_PATH)
         lr_model = joblib.load(LR_PATH)
         rf_model = joblib.load(RF_PATH)
-        print("✔ Models loaded successfully!")
         return
 
     df = pd.read_csv(DATA_PATH)
@@ -48,12 +46,7 @@ def build_models():
     joblib.dump(tfidf, TFIDF_PATH)
     joblib.dump(lr_model, LR_PATH)
     joblib.dump(rf_model, RF_PATH)
-    print("✔ Đã train và lưu models vào thư mục data!")
 
-def rule_model(rating):
-    if rating >= 4: return 1
-    elif rating <= 2: return 0
-    else: return 1
 
 def predict(review_text, rating=3):
     if tfidf is None:
@@ -64,12 +57,10 @@ def predict(review_text, rating=3):
 
     pred_lr = lr_model.predict(vec)[0]
     pred_rf = rf_model.predict(vec)[0]
-    pred_rule = rule_model(rating)
 
-    final_score = (pred_lr + pred_rf + pred_rule) / 3
-    return 1 if final_score >= 0.5 else 0
+    final_score = (pred_lr + pred_rf) / 2
+    if final_score >= 0.5:
+        return 1 
+    else:
+        return 0
 
-if __name__ == "__main__":
-    build_models()
-    # Test thử 1 câu
-    print(f"Test prediction: {predict('I love this lipstick, very smooth', 5)}")
