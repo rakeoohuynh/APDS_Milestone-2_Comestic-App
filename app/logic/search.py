@@ -26,10 +26,10 @@ product_df = df.groupby("product_id").agg({
 
 # Combine features into a single string for TF-IDF vectorization
 product_df["combined_text"] = (
-    product_df["brand_name"] + " " +
-    product_df["product_title"] + " " +
+    (product_df["brand_name"] + " ") * 10 +   
+    (product_df["product_title"] + " ") * 5 + 
     product_df["product_tags"] + " " +
-    product_df["review_text"]
+    product_df["review_text"]                
 )
 
 # Initialize TF-IDF Vectorizer using the predefined vocabulary 
@@ -37,7 +37,7 @@ tfidf = TfidfVectorizer(vocabulary=vocab_dict)
 X_products = tfidf.fit_transform(product_df["combined_text"])
 
 
-def search_products(user_search, top_n=5):
+def search_products(user_search, top_n = 20):
     # Clean the search query
     user_search = preprocess_text(user_search)
 
@@ -48,7 +48,13 @@ def search_products(user_search, top_n=5):
     vec = tfidf.transform([user_search])
     similarity = cosine_similarity(vec, X_products)
 
-    # Sort similarity scores in descending order and select the top N indices
-    top_idx = similarity[0].argsort()[::-1][:top_n]
-    result = product_df.iloc[top_idx][["product_id", "brand_name", "product_title"]]
+    relevant_indices = [i for i, score in enumerate(similarity) if score > 0.1]
+
+    sorted_indices = sorted(relevant_indices, key=lambda i: similarity[i], reverse=True)[:top_n]
+
+    if not sorted_indices:
+        return pd.DataFrame()
+    
+    result = product_df.iloc[sorted_indices][["product_id", "brand_name", "product_title"]]
     return result
+
