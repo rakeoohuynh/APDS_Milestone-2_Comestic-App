@@ -19,7 +19,7 @@ def get_product_reviews(product_id):
     reviews = []
     pid = str(product_id)
 
-    with open(_PROC_CSV, encoding='utf-8') as f:
+    with open(_RAW_CSV, encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
             if row['product_id'] == pid:
