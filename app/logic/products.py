@@ -7,7 +7,7 @@ _BASE_DIR = Path(__file__).resolve().parent.parent.parent
 _IMAGES_DIR = _BASE_DIR / "static" / "images"
 
 # Image formats we support (checked in this order)
-_SUPPORTED_EXTS = ('.jpg', '.jpeg', '.png', '.webp', '.svg')
+_SUPPORTED_EXTS = ('.jpg', '.jpeg', '.png', '.webp', '.svg','.avif')
 
 # These act like a simple in-memory cache so we don't re-read the CSV on every request
 _PRODUCTS = None       # list of all products
