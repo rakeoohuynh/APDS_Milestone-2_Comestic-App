@@ -137,6 +137,36 @@
         {% endif %}
     </section>
 
+    <!-- ── Recommendations ───────────────────────── -->
+    {% if recommendations %}
+    <section class="reco-section">
+        <h2>You May Also Like</h2>
+        <div class="reco-grid">
+            {% for item in recommendations %}
+            <a class="product-card" href="/product/{{ item.id }}">
+                <div class="card-img-wrap">
+                    <img src="{{ url_for('static', filename=item.image) }}" alt="{{ item.name }}" loading="lazy">
+                    <span class="brand-badge">{{ item.brand }}</span>
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title">{{ item.name }}</h3>
+                    <div class="card-footer">
+                        <div class="rating">
+                            {% set full = item.rating | int %}
+                            {% for i in range(5) %}
+                                <span class="{{ 'star-full' if i < full else 'star-empty' }}">&#9733;</span>
+                            {% endfor %}
+                            <span class="rating-count">({{ item.rating_count }})</span>
+                        </div>
+                        <span class="price">&#8377;{{ item.price }}</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
 </main>
 
 <!-- ── Footer ───────────────────────────────────────── -->
