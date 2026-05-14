@@ -10,7 +10,6 @@ from sklearn.naive_bayes import GaussianNB
 
 from app.preprocessed import preprocess_text
 
-
 # Define directory paths for data and model persistence
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = BASE_DIR / "data"
