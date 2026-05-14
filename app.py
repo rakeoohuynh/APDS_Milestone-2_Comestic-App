@@ -1,10 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from app.logic.products import get_paginated_products, get_product_by_id, clear_products_cache
 from app.logic.reviews import get_product_reviews, append_review
 from app.logic.recommend import recommend_products
+from app.logic.ml_model import predict, build_models, save_new_review
 
 app = Flask(__name__)
 app.secret_key = 'beauty-shop-secret'
+
+print("--- Load AI Models ... ---")
+build_models()
 
 @app.route('/')
 def index():
@@ -60,12 +64,26 @@ def product_detail(product_id):
 #   - flash 'Order placed! You can now leave a verified review.' success
 #   - redirect to product_detail
 
+@app.route('/api/predict_label', methods=['POST'])
+def api_predict():
+    data = request.json
+    text = data.get('text', '')
+    rating = int(data.get('rating', 3))
+    
+    # Gọi hàm predict từ ml_model.py
+    label_id = predict(text, rating)
+    label_text = "Buy" if label_id == 1 else "Not Buy"
+    
+    return jsonify({"label": label_text})
+
 @app.route('/product/<product_id>/review', methods=['POST'])
 def add_review(product_id):
     author = request.form.get('author', '').strip()
-    rating = request.form.get('rating', '').strip()
+    rating = int(request.form.get('rating', '').strip())
     title  = request.form.get('review_title', '').strip()
     text   = request.form.get('review_text', '').strip()
+
+    final_label = int(request.form.get('final_label', 1))
 
     if not all([author, rating, title, text]):
         flash('Please fill in all fields.', 'error')
@@ -73,6 +91,8 @@ def add_review(product_id):
 
     ok = append_review(product_id, author, rating, title, text)
     if ok:
+        save_new_review(product_id, title, text, rating, final_label)
+
         clear_products_cache()
         flash('Your review has been submitted. Thank you!', 'success')
     else:
@@ -80,5 +100,8 @@ def add_review(product_id):
 
     return redirect(url_for('product_detail', product_id=product_id))
 
+    print("FORM DATA:", request.form)
+    print("RATING RECEIVED:", request.form.get('rating'))
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
