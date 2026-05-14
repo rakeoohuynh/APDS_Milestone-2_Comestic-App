@@ -72,6 +72,10 @@ def _insert_row_grouped(path, row):
         writer.writerows(rows)
 
 
+# TODO: add is_buyer=False parameter to append_review signature
+#   - pass is_buyer from add_review route (check product_id in session['purchased'])
+#   - set raw_row['is_a_buyer']       = 'TRUE' if is_buyer else 'FALSE'
+#   - set processed_row['is_a_buyer'] = 'True' if is_buyer else 'False'
 def append_review(product_id, author, rating, title, text):
     from app.logic.products import get_product_by_id
     from app.preprocessed import preprocess_text
