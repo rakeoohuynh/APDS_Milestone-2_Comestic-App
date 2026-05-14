@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout — Beauty Shop</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- ── Header ───────────────────────────────────────── -->
+<header class="hero hero--slim">
+    <div class="hero-inner">
+        <a href="/" class="logo">Beauty<span>Shop</span></a>
+    </div>
+</header>
+
+<!-- ── Main ─────────────────────────────────────────── -->
+<main class="main-content">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="/">Home</a>
+        <span>&rsaquo;</span>
+        <a href="/product/{{ product.id }}">{{ product.brand }}</a>
+        <span>&rsaquo;</span>
+        <span class="breadcrumb-current">Checkout</span>
+    </nav>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash flash--{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="checkout-wrap">
+
+        <!-- ── Order Summary ──────────────────────────── -->
+        <div class="checkout-summary">
+            <h2 class="checkout-section-title">Order Summary</h2>
+            <div class="checkout-product">
+                <img
+                    src="{{ url_for('static', filename=product.image) }}"
+                    alt="{{ product.name }}"
+                    class="checkout-img"
+                >
+                <div class="checkout-product-info">
+                    <span class="checkout-brand">{{ product.brand }}</span>
+                    <h3 class="checkout-product-name">{{ product.name }}</h3>
+                    <span class="checkout-unit-price">&#8377;{{ product.price }} / unit</span>
+                </div>
+            </div>
+
+            <div class="checkout-total-row">
+                <span class="checkout-total-label">Total</span>
+                <!-- JS updates this when quantity changes -->
+                <span class="checkout-total-price">&#8377;{{ product.price }}</span>
+            </div>
+        </div>
+
+        <!-- ── Delivery Form ──────────────────────────── -->
+        <div class="checkout-form-wrap">
+            <h2 class="checkout-section-title">Delivery Details</h2>
+
+            <!--
+                TODO (app.py): POST /product/<product_id>/checkout
+                  - validate all fields
+                  - add product_id to session['purchased'] list
+                  - flash success message
+                  - redirect back to product_detail
+            -->
+            <form action="/product/{{ product.id }}/checkout" method="POST" class="checkout-form">
+
+                <div class="form-group">
+                    <label for="full_name">Full Name</label>
+                    <input type="text" id="full_name" name="full_name"
+                           placeholder="Enter your full name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email"
+                           placeholder="Enter your email address" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Delivery Address</label>
+                    <textarea id="address" name="address" rows="3"
+                              placeholder="House / flat no., street, city, pincode" required></textarea>
+                </div>
+
+                <div class="form-group form-group--inline">
+                    <label for="quantity">Quantity</label>
+                    <input type="number" id="quantity" name="quantity"
+                           value="1" min="1" max="10" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit btn-place-order">
+                        &#128722; Place Order
+                    </button>
+                    <a href="/product/{{ product.id }}" class="btn-cancel">Cancel</a>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+
+</main>
+
+<!-- ── Footer ───────────────────────────────────────── -->
+<footer class="footer">
+    <p>Beauty Shop &copy; 2025 &mdash; Powered by Nykaa data</p>
+</footer>
+
+<script>
+    const qtyInput  = document.getElementById('quantity');
+    const totalEl   = document.querySelector('.checkout-total-price');
+    const unitPrice = {{ product.price }};
+
+    qtyInput.addEventListener('input', () => {
+        const qty = Math.max(1, parseInt(qtyInput.value) || 1);
+        totalEl.textContent = '₹' + (unitPrice * qty).toLocaleString('en-IN');
+    });
+</script>
+
+</body>
+</html>
