@@ -31,6 +31,23 @@ def product_detail(product_id):
     except Exception:
         pass
 
+    # Label each review: 1 = good (predicted buyer), 0 = bad (predicted non-buyer)
+    # Falls back to rating >= 4 as "good" if ml_model is unavailable
+    try:
+        from app.logic.ml_model import predict as ml_predict
+        ml_available = True
+    except Exception:
+        ml_available = False
+
+    for review in reviews:
+        if ml_available:
+            try:
+                review['ml_label'] = ml_predict(review['text'], int(review['rating']))
+            except Exception:
+                review['ml_label'] = 1 if review['rating'] >= 4 else 0
+        else:
+            review['ml_label'] = 1 if review['rating'] >= 4 else 0
+
     return render_template('product.html', product=product, reviews=reviews, recommendations=recommendations)
 
 # TODO: GET /product/<product_id>/checkout
