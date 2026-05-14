@@ -57,6 +57,18 @@
 
             <div class="detail-price">&#8377;{{ product.price }}</div>
 
+            <!-- Buy button -->
+            <div class="buy-wrap">
+                <!--
+                    TODO (app.py): before rendering this page, check session['purchased']
+                    and pass is_buyer = product.id in session.get('purchased', []) to template.
+                    Then show .purchased-note below only when is_buyer is True.
+                -->
+                <a href="/product/{{ product.id }}/checkout" class="btn-buy">&#128722; Buy Now</a>
+                <!-- TODO: render this note conditionally when is_buyer == True -->
+                {# <span class="purchased-note">&#10003; You already purchased this</span> #}
+            </div>
+
             {% if product.tags %}
             <span class="detail-tag">{{ product.tags }}</span>
             {% endif %}
