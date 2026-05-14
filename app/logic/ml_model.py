@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import joblib
 from pathlib import Path
-import gensim.downloader as api
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -11,8 +10,6 @@ from sklearn.naive_bayes import GaussianNB
 
 from app.preprocessed import preprocess_text
 
-# Load pre-trained GloVe word vectors (50-dimension version)
-glove_model = api.load("glove-wiki-gigaword-50")
 
 # Define directory paths for data and model persistence
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -62,6 +59,12 @@ def build_models():
 
     # Load and clean dataset
     df = pd.read_csv(DATA_PATH)
+
+    feedback_path = DATA_DIR / "test_feedback.csv"
+    if feedback_path.exists():
+        feedback_df = pd.read_csv(feedback_path)
+        df = pd.concat([df, feedback_df], ignore_index=True)
+
     # Remove empty reviews to ensure training quality
     df = df[df["review_text"].fillna("").str.strip() != ""].reset_index(drop=True)
 
@@ -72,24 +75,38 @@ def build_models():
 
     # --- MODEL 1: Bag-of-Words (Count Vectors) + Logistic Regression ---
     # Focuses on specific keyword frequencies
-    count_vec = TfidfVectorizer(use_idf=False, norm=None)
+    count_vec = TfidfVectorizer(use_idf=False, norm=None, ngram_range=(1, 2))
     X = count_vec.fit_transform(texts)
-    lr_model = LogisticRegression(max_iter=1000).fit(X, y)
+    lr_model = LogisticRegression(max_iter=1000, class_weight='balanced').fit(X, y)
 
     # --- MODEL 2: Weighted Word Embeddings + Random Forest ---
     # Focuses on semantic meaning using TF-IDF weighted GloVe vectors
-    tfidf_transformer = TfidfVectorizer()
+    tfidf_transformer = TfidfVectorizer(ngram_range=(1, 2))
     tfidf_transformer.fit(texts)
 
-    # Load pre-calculated vectors from Milestone 1
     with open(DATA_DIR / "weighted_vectors.txt", "r") as f:
-        weighted_vectors = [line.strip() for line in f if line.strip()]
+        weighted_vectors_raw = [line.strip() for line in f if line.strip()]
     
-    X_weighted = parse_vector_list(weighted_vectors, non_empty_idx)
-    rf_model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1).fit(X_weighted, y)
+    df_base = pd.read_csv(DATA_PATH)
+    base_indices = df_base[df_base["review_text"].fillna("").str.strip() != ""].index.tolist()
+    X_base = parse_vector_list(weighted_vectors_raw, base_indices)
+
+    if feedback_path.exists():
+        feedback_df = pd.read_csv(feedback_path)
+        fb_texts = feedback_df["review_text"].fillna("").str.strip()
+        fb_texts = fb_texts[fb_texts != ""]
+
+        X_fb = np.array([get_single_weighted_vector(t) for t in fb_texts])
+
+        X_final = np.vstack([X_base, X_fb])
+    else:
+        X_final = X_base
+
+    rf_model = RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced').fit(X_final, y)
 
     # --- MODEL 3: Rating-based Analysis (Gaussian Naive Bayes) ---
     # Focuses on numerical patterns 
+
     X_rating = df[["review_rating"]].values
     rating_model = GaussianNB().fit(X_rating, y)
 
@@ -108,8 +125,9 @@ def get_single_weighted_vector(text):
     """
     global glove_model, tfidf_transformer
 
-    if glove_model is None or tfidf_transformer is None:
-        return np.zeros(50)
+    if 'glove_model' not in globals() or glove_model is None:
+        import gensim.downloader as api
+        glove_model = api.load("glove-wiki-gigaword-50")
 
     review_vec = np.zeros(50)
     
@@ -147,11 +165,18 @@ def predict(review_text, rating=3):
 
     # 3. Get Probability from Model 3 
     pred_rating = rating_model.predict_proba([[rating]])[0][1]
+
+    # In debug để kiểm tra model nào đang gây ra lỗi Positive
+    print(f"\n--- DEBUG SCORES ---")
+    print(f"LR (Keyword): {pred_lr:.4f}")
+    print(f"RF (Semantic): {pred_rf:.4f}")
+    print(f"GNB (Rating): {pred_rating:.4f}")
     
     # Calculate Final Score 
-    final_score = (pred_lr + pred_rf + pred_rating) / 3
+    final_score = (pred_lr * 0.45) + (pred_rf * 0.45) + (pred_rating * 0.1)
+    print(f"FINAL SCORE: {final_score:.4f}")
 
-    return 1 if final_score >= 0.5 else 0
+    return 1 if final_score >= 0.7 else 0
     
 def save_new_review(product_id, review_title, review_text, rating, final_label):
     """
@@ -166,7 +191,10 @@ def save_new_review(product_id, review_title, review_text, rating, final_label):
         "is_a_buyer": final_label
     }])
     # Append to file without rewriting headers
-    new_review.to_csv(DATA_DIR / "test_feedback.csv", mode="a", header=False, index=False)
+    file_path = DATA_DIR / "test_feedback.csv"
+    file_exists = file_path.exists()
+
+    new_review.to_csv(file_path, mode="a", header=not file_exists, index=False)
 
 if __name__ == "__main__":
     # Internal test script
