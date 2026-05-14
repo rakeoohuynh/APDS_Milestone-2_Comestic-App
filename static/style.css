@@ -385,6 +385,27 @@ body {
 .reviews-header h2 { font-size: 1.25rem; font-weight: 700; color: #1a1a1a; }
 .reviews-count { color: #888; font-weight: 400; font-size: 1rem; }
 
+.reviews-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.review-filter-select {
+    padding: 7px 12px;
+    border-radius: 6px;
+    border: 1px solid #e0c8d4;
+    background: #fff;
+    color: #5a1535;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.review-filter-select:focus { border-color: #c9748c; }
+
 .btn-add-review {
     padding: 9px 20px;
     background: #8b3a62;
@@ -501,6 +522,33 @@ body {
 .review-text  { font-size: 0.85rem; color: #666; line-height: 1.55; }
 
 .no-reviews { color: #aaa; font-size: 0.95rem; padding: 24px 0; }
+
+.review-pagination {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 24px;
+}
+.review-page-btn {
+    min-width: 36px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #e0c8d4;
+    background: #fff;
+    color: #5a1535;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.review-page-btn:hover:not(:disabled) { background: #f5e6ee; }
+.review-page-btn.active {
+    background: #8b3a62;
+    color: #fff;
+    border-color: #8b3a62;
+    cursor: default;
+}
 
 /* ── Buy button ──────────────────────────────────── */
 .buy-wrap {
