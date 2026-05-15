@@ -45,7 +45,6 @@ IMPORTANT DETAILS & DATA
 
 EXTERNAL DATA LINK (If applicable)
 -----------------------------------------------------------------------------
-[If your required files/data to run the website exceed 50MB, provide the OneDrive URL here and ensure the folder is accessible. Otherwise, leave blank or remove this section] [1].
-OneDrive URL: [Insert Link Here]
+OneDrive URL: https://rmiteduau-my.sharepoint.com/:f:/g/personal/s4104540_rmit_edu_vn/IgC09VNc4JonQqBsRDUz9-7SAZjjLq71DgUvDaYcLx8OnRs?e=3o5tP6
 
 =============================================================================
