@@ -31,9 +31,40 @@ IMPLEMENTED FEATURES
 
 HOW TO RUN THE APPLICATION
 -----------------------------------------------------------------------------
-1. [List step-by-step instructions on how to install dependencies and run the website locally]
-2. [Include instructions on how to access the custom feature or admin tools, if applicable]
-3. [Mention any specific commands to start the web server]
+IMPORTANT: Python 3.12 is required. gensim 4.4.0 is not compatible with
+Python 3.13 or later.
+
+Step 1 — Create a Python 3.12 virtual environment
+    py -3.12 -m venv myenv312          (Windows)
+    python3.12 -m venv myenv312        (macOS / Linux)
+
+Step 2 — Activate the virtual environment
+    myenv312\Scripts\activate          (Windows)
+    source myenv312/bin/activate       (macOS / Linux)
+
+Step 3 — Install dependencies
+    pip install -r requirements.txt
+
+    Note: gensim will download the GloVe word vectors (~66 MB) the first
+    time the app starts. This is a one-time download cached locally.
+
+Step 4 — Run the web server
+    python app.py
+
+Step 5 — Open the app in your browser
+    http://127.0.0.1:5000
+
+FEATURES WALKTHROUGH
+    - Search: use the search bar on the home page to find products by
+      brand name or keyword.
+    - Product detail: click any product card to view details, reviews,
+      and similar product recommendations.
+    - Add a review: click "+ Add Review" on a product page. After filling
+      in the form and clicking Submit, the AI model will classify the
+      review as "Buy" or "Not Buy". You may override the label before
+      confirming.
+    - Buy Now: click "Buy Now" on a product page to go to the checkout
+      form.
 
 
 IMPORTANT DETAILS & DATA
@@ -43,9 +74,8 @@ IMPORTANT DETAILS & DATA
 * The 4-minute video demonstration (.mp4) is included in the submission package [1, 6].
 
 
-EXTERNAL DATA LINK (If applicable)
+EXTERNAL DATA LINK
 -----------------------------------------------------------------------------
-[If your required files/data to run the website exceed 50MB, provide the OneDrive URL here and ensure the folder is accessible. Otherwise, leave blank or remove this section] [1].
-OneDrive URL: [Insert Link Here]
+OneDrive URL: https://rmiteduau-my.sharepoint.com/:f:/g/personal/s4104540_rmit_edu_vn/IgC09VNc4JonQqBsRDUz9-7SAZjjLq71DgUvDaYcLx8OnRs?e=3o5tP6
 
 =============================================================================

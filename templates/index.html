@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beauty Shop</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- ── Header ───────────────────────────────────────── -->
+<header class="hero">
+    <div class="hero-inner">
+        <a href="/" class="logo">Beauty<span>Shop</span></a>
+        <p class="tagline">Discover premium cosmetics from top brands</p>
+        <form class="search-form" action="/" method="GET">
+            <input
+                type="text"
+                name="search_box"
+                placeholder="Search by brand or product name..."
+                value="{{ last_search }}"
+                autocomplete="off"
+            >
+            <button type="submit">Search</button>
+        </form>
+    </div>
+</header>
+
+<!-- ── Main ─────────────────────────────────────────── -->
+<main class="main-content">
+
+    <!-- Results bar -->
+    <div class="results-bar">
+        {% if last_search %}
+            <span class="results-msg">
+                Found <strong>{{ total }}</strong> product{{ 's' if total != 1 }} matching
+                "<em>{{ last_search }}</em>"
+            </span>
+            <a href="/" class="btn-back">&#8592; Back to Home</a>
+        {% else %}
+            <span class="results-msg">All Products &mdash; <strong>{{ total }}</strong> items</span>
+            <span class="page-info">Page {{ page }} of {{ total_pages }}</span>
+        {% endif %}
+    </div>
+
+    <!-- Product grid -->
+    {% if products %}
+    <div class="product-grid">
+        {% for item in products %}
+        <a class="product-card" href="/product/{{ item.id }}">
+            <div class="card-img-wrap">
+                <img src="{{ url_for('static', filename=item.image) }}" alt="{{ item.name }}" loading="lazy">
+                <span class="brand-badge">{{ item.brand }}</span>
+            </div>
+            <div class="card-body">
+                <h3 class="card-title">{{ item.name }}</h3>
+                <p class="card-desc">{{ item.description }}</p>
+                <div class="card-footer">
+                    <div class="rating">
+                        {% set full = item.rating | int %}
+                        {% for i in range(5) %}
+                            <span class="{{ 'star-full' if i < full else 'star-empty' }}">&#9733;</span>
+                        {% endfor %}
+                        <span class="rating-count">({{ item.rating_count }})</span>
+                    </div>
+                    <span class="price">&#8377;{{ item.price }}</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav class="pagination">
+        {% if page > 1 %}
+            <a href="/?page={{ page - 1 }}&search_box={{ last_search }}" class="page-btn">&laquo; Prev</a>
+        {% endif %}
+
+        {% set window = 2 %}
+        {% for p in range(1, total_pages + 1) %}
+            {% if p == 1 or p == total_pages or (p >= page - window and p <= page + window) %}
+                {% if loop.changed(p > 1 and p < page - window) %}
+                    <span class="page-ellipsis">&hellip;</span>
+                {% endif %}
+                <a href="/?page={{ p }}&search_box={{ last_search }}"
+                   class="page-btn {{ 'active' if p == page }}">{{ p }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page < total_pages %}
+            <a href="/?page={{ page + 1 }}&search_box={{ last_search }}" class="page-btn">Next &raquo;</a>
+        {% endif %}
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <p>No products found for "<strong>{{ last_search }}</strong>".</p>
+        <a href="/" class="btn-back">&#8592; Back to Home</a>
+    </div>
+    {% endif %}
+
+</main>
+
+<!-- ── Footer ───────────────────────────────────────── -->
+<footer class="footer">
+    <p>Beauty Shop &copy; 2025 &mdash; Powered by Nykaa data</p>
+</footer>
+
+</body>
+</html>

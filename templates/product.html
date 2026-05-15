@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} — Beauty Shop</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- ── Header ───────────────────────────────────────── -->
+<header class="hero hero--slim">
+    <div class="hero-inner">
+        <a href="/" class="logo">Beauty<span>Shop</span></a>
+    </div>
+</header>
+
+<!-- ── Main ─────────────────────────────────────────── -->
+<main class="main-content">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="/">Home</a>
+        <span>&rsaquo;</span>
+        <span>{{ product.brand }}</span>
+        <span>&rsaquo;</span>
+        <span class="breadcrumb-current">{{ product.name }}</span>
+    </nav>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash flash--{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- ── Product detail ─────────────────────────── -->
+    <section class="detail-section">
+        <div class="detail-img-wrap">
+            <img src="{{ url_for('static', filename=product.image) }}" alt="{{ product.name }}">
+        </div>
+
+        <div class="detail-info">
+            <span class="detail-brand">{{ product.brand }}</span>
+            <h1 class="detail-title">{{ product.name }}</h1>
+
+            <div class="detail-rating">
+                {% set full = product.rating | int %}
+                {% for i in range(5) %}
+                    <span class="{{ 'star-full' if i < full else 'star-empty' }}">&#9733;</span>
+                {% endfor %}
+                <span class="detail-rating-val">{{ product.rating }} / 5</span>
+                <span class="detail-rating-count">({{ product.rating_count }} reviews)</span>
+            </div>
+
+            <div class="detail-price">&#8377;{{ product.price }}</div>
+
+            <!-- Buy button -->
+            <div class="buy-wrap">
+                <!--
+                    TODO (app.py): before rendering this page, check session['purchased']
+                    and pass is_buyer = product.id in session.get('purchased', []) to template.
+                    Then show .purchased-note below only when is_buyer is True.
+                -->
+                <a href="/product/{{ product.id }}/checkout" class="btn-buy">&#128722; Buy Now</a>
+                <!-- TODO: render this note conditionally when is_buyer == True -->
+                {# <span class="purchased-note">&#10003; You already purchased this</span> #}
+            </div>
+
+            {% if product.tags %}
+            <span class="detail-tag">{{ product.tags }}</span>
+            {% endif %}
+
+            <p class="detail-desc">{{ product.description }}</p>
+        </div>
+    </section>
+
+    <!-- ── Reviews ────────────────────────────────── -->
+    <section class="reviews-section">
+        <div class="reviews-header">
+            <h2>Customer Reviews <span class="reviews-count">({{ reviews|length }})</span></h2>
+            <div class="reviews-header-actions">
+                <select class="review-filter-select" onchange="filterReviews(this.value)">
+                    <option value="all">All Reviews</option>
+                    <option value="good">High rating</option>
+                    <option value="bad">Low rating</option>
+                </select>
+                <button class="btn-add-review" onclick="toggleReviewForm()">&#43; Add Review</button>
+            </div>
+        </div>
+
+        <!-- Add Review Form (hidden by default) -->
+        <div class="review-form-wrap" id="reviewForm" style="display:none;">
+            <h3 class="form-title">Write a Review</h3>
+            <form action="/product/{{ product.id }}/review" method="POST" class="review-form">
+
+                <div class="form-group">
+                    <label for="author">Your Name</label>
+                    <input type="text" id="author" name="author" placeholder="Enter your name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Rating</label>
+                    <div class="star-picker">
+                        {% for val in [5,4,3,2,1] %}
+                        <input type="radio" id="star-{{ product.id }}-{{ val }}" name="rating" value="{{ val }}" required>
+                        <label for="star-{{ product.id }}-{{ val }}" title="{{ val }} stars">&#9733;</label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="review_title">Review Title</label>
+                    <input type="text" id="review_title" name="review_title" placeholder="Summarise your experience" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="review_text">Review</label>
+                    <textarea id="review_text" name="review_text" rows="4" placeholder="Tell us what you think..." required></textarea>
+                </div>
+
+                <div id="ai-prediction-wrap" style="display:none; margin: 15px 0; padding: 15px; background: #f0f8ff; border-radius: 8px; border: 2px solid #4a90e2;">
+                    <p style="margin: 0 0 10px 0; font-weight: bold;">
+                        AI Suggestion: <span id="ai-label-text" style="color: #4a90e2;">Analyzing...</span>
+                    </p>
+                    <label class="ai-select-label" for="final_label" style="display: block; margin-bottom: 8px;">
+                        Is our prediction accurate? Feel free to adjust:
+                    </label>
+                    <select id="final_label" name="final_label" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                        <option value="">-- Select your preference --</option>
+                        <option value="1">Yes, I'd recommend this (Buy)</option>
+                        <option value="0">No, I wouldn't recommend this (Not Buy)</option>
+                    </select>
+                    <span class="ai-note" style="display: block; margin-top: 8px; font-size: 12px; color: #666;">* Your feedback helps improve our recommendation engine.</span>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit" id="submitBtn">Submit Review</button>
+                    <button type="button" class="btn-cancel" onclick="toggleReviewForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Review list -->
+        {% if reviews %}
+        <div class="review-list">
+            {% for r in reviews %}
+            <div class="review-card" data-label="{{ 'good' if r.ml_label == 1 else 'bad' }}">
+                <div class="review-meta">
+                    <div class="review-stars">
+                        {% set rfull = r.rating | int %}
+                        {% for i in range(5) %}
+                            <span class="{{ 'star-full' if i < rfull else 'star-empty' }}">&#9733;</span>
+                        {% endfor %}
+                    </div>
+                    <span class="review-author">{{ r.author }}</span>
+                    <span class="review-date">{{ r.date }}</span>
+                    {% if r.is_buyer %}
+                    <span class="verified-badge">&#10003; Verified Buyer</span>
+                    {% endif %}
+                </div>
+                <h4 class="review-title">{{ r.title }}</h4>
+                <p class="review-text">{{ r.text }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="no-reviews">No reviews yet. Be the first to review this product!</p>
+        {% endif %}
+
+        <div id="reviewPagination" class="review-pagination"></div>
+    </section>
+
+    <!-- ── Recommendations ───────────────────────── -->
+    {% if recommendations %}
+    <section class="reco-section">
+        <h2>You May Also Like</h2>
+        <div class="reco-grid">
+            {% for item in recommendations %}
+            <a class="product-card" href="/product/{{ item.id }}">
+                <div class="card-img-wrap">
+                    <img src="{{ url_for('static', filename=item.image) }}" alt="{{ item.name }}" loading="lazy">
+                    <span class="brand-badge">{{ item.brand }}</span>
+                </div>
+                <div class="card-body">
+                    <h3 class="card-title">{{ item.name }}</h3>
+                    <div class="card-footer">
+                        <div class="rating">
+                            {% set full = item.rating | int %}
+                            {% for i in range(5) %}
+                                <span class="{{ 'star-full' if i < full else 'star-empty' }}">&#9733;</span>
+                            {% endfor %}
+                            <span class="rating-count">({{ item.rating_count }})</span>
+                        </div>
+                        <span class="price">&#8377;{{ item.price }}</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+</main>
+
+<!-- ── Footer ───────────────────────────────────────── -->
+<footer class="footer">
+    <p>Beauty Shop &copy; 2025 &mdash; Powered by Nykaa data</p>
+</footer>
+
+<script>
+const PER_PAGE = 5;
+let currentPage = 1;
+
+function getFilteredCards() {
+    const label = document.querySelector('.review-filter-select').value;
+    return Array.from(document.querySelectorAll('.review-card')).filter(
+        card => label === 'all' || card.dataset.label === label
+    );
+}
+
+function renderPage() {
+    const cards = getFilteredCards();
+    const totalPages = Math.max(1, Math.ceil(cards.length / PER_PAGE));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    // Hide all, then show only current page slice
+    document.querySelectorAll('.review-card').forEach(c => c.style.display = 'none');
+    cards.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE)
+         .forEach(c => c.style.display = '');
+
+    renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+    const container = document.getElementById('reviewPagination');
+    container.innerHTML = '';
+    if (totalPages <= 1) return;
+
+    const makeBtn = (label, page, isActive) => {
+        const btn = document.createElement('button');
+        btn.className = 'review-page-btn' + (isActive ? ' active' : '');
+        btn.textContent = label;
+        btn.disabled = isActive;
+        btn.onclick = () => { currentPage = page; renderPage(); };
+        return btn;
+    };
+
+    const makeDots = () => {
+        const span = document.createElement('span');
+        span.className = 'review-page-dots';
+        span.textContent = '...';
+        return span;
+    };
+
+    if (currentPage > 1)
+        container.appendChild(makeBtn('« Prev', currentPage - 1, false));
+
+    const pages = new Set([1, totalPages]);
+    for (let p = Math.max(1, currentPage - 2); p <= Math.min(totalPages, currentPage + 2); p++)
+        pages.add(p);
+
+    const sorted = Array.from(pages).sort((a, b) => a - b);
+    let prev = 0;
+    for (const p of sorted) {
+        if (p - prev > 1) container.appendChild(makeDots());
+        container.appendChild(makeBtn(p, p, p === currentPage));
+        prev = p;
+    }
+
+    if (currentPage < totalPages)
+        container.appendChild(makeBtn('Next »', currentPage + 1, false));
+}
+
+function filterReviews(label) {
+    currentPage = 1;
+    renderPage();
+}
+
+function toggleReviewForm() {
+
+    const form = document.getElementById('reviewForm');
+    const btn  = document.querySelector('.btn-add-review');
+
+    if (form.style.display === 'none') {
+
+        form.style.display = 'block';
+
+        btn.textContent = '✕ Close';
+
+        form.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+
+    } else {
+
+        form.style.display = 'none';
+
+        btn.textContent = '+ Add Review';
+
+        document.querySelector('.review-form').reset();
+
+        document.getElementById('ai-prediction-wrap').style.display = 'none';
+
+        document.getElementById('final_label').value = '';
+
+        aiPredictionDone = false;
+
+        document.getElementById('submitBtn').textContent =
+            'Submit Review';
+    }
+}
+
+let aiPredictionDone = false;
+
+document.addEventListener('DOMContentLoaded', renderPage);
+
+document.addEventListener('DOMContentLoaded', function(){
+
+    const form = document.querySelector('.review-form');
+
+    if (!form) {
+        console.error('Review form not found');
+        return;
+    }
+
+    form.addEventListener('submit', async function(event) {
+
+        // FIRST SUBMIT → AI PREDICTION
+        if (!aiPredictionDone) {
+
+            event.preventDefault();
+
+            const reviewText =
+                document.getElementById('review_text').value.trim();
+
+            const selectedRating =
+                document.querySelector('input[name="rating"]:checked');
+
+            if (reviewText.length < 10 || !selectedRating) {
+
+                alert(
+                    'Please provide a rating and write at least 10 characters.'
+                );
+
+                return;
+            }
+
+            const rating = parseInt(selectedRating.value);
+
+            const aiWrap =
+                document.getElementById('ai-prediction-wrap');
+
+            const aiLabelText =
+                document.getElementById('ai-label-text');
+
+            const labelSelect =
+                document.getElementById('final_label');
+
+            const submitBtn =
+                document.getElementById('submitBtn');
+
+            aiWrap.style.display = 'block';
+
+            aiLabelText.textContent = 'Analyzing your review...';
+
+            aiLabelText.style.color = '#666';
+
+            submitBtn.disabled = true;
+
+            try {
+
+                const response = await fetch('/api/predict_label', {
+
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        text: reviewText,
+                        rating: rating
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.label === 'Buy') {
+
+                    aiLabelText.textContent =
+                        '✓ Positive - This looks like a Buyer Review';
+
+                    aiLabelText.style.color = '#27ae60';
+
+                    labelSelect.value = '1';
+
+                } else {
+
+                    aiLabelText.textContent =
+                        '✗ Negative - This looks like a Not Buy Review';
+
+                    aiLabelText.style.color = '#e74c3c';
+
+                    labelSelect.value = '0';
+                }
+
+                aiPredictionDone = true;
+
+                submitBtn.disabled = false;
+
+                submitBtn.textContent = 'Confirm Review';
+
+            } catch (error) {
+
+                aiLabelText.textContent =
+                    'Error analyzing review. Please try again.';
+
+                aiLabelText.style.color = '#e74c3c';
+
+                submitBtn.disabled = false;
+
+                console.error(error);
+            }
+
+            return;
+        }
+
+        // SECOND SUBMIT
+        // form submits normally
+
+    });
+});
+
+</script>
+
+</body>
+</html>
