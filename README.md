@@ -28,5 +28,5 @@ This project is an online shopping website for cosmetic and beauty products [2].
 * An up-to-4-minute video demonstration (`.mp4`) is included in the submission package [1, 6].
 
 ### External Data Link (If applicable)
-*(If the required files/data to run the website exceed 50MB, the OneDrive URL is provided below [1]. Otherwise, this section can be removed).*
-**OneDrive URL:** [\[Insert Link Here\]](https://rmiteduau-my.sharepoint.com/:f:/g/personal/s4104540_rmit_edu_vn/IgC09VNc4JonQqBsRDUz9-7SAZjjLq71DgUvDaYcLx8OnRs?e=3o5tP6)
+
+**OneDrive URL:** [\[Link Here\]](https://rmiteduau-my.sharepoint.com/:f:/g/personal/s4104540_rmit_edu_vn/IgC09VNc4JonQqBsRDUz9-7SAZjjLq71DgUvDaYcLx8OnRs?e=3o5tP6)
