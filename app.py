@@ -70,7 +70,7 @@ def api_predict():
     text = data.get('text', '')
     rating = int(data.get('rating', 3))
     
-    # Gọi hàm predict từ ml_model.py
+    # Call predict function from ml_model.py
     label_id = predict(text, rating)
     label_text = "Buy" if label_id == 1 else "Not Buy"
     
