@@ -543,6 +543,13 @@ body {
     transition: background 0.15s;
 }
 .review-page-btn:hover:not(:disabled) { background: #f5e6ee; }
+.review-page-dots {
+    padding: 6px 4px;
+    color: #8b3a62;
+    font-weight: 600;
+    font-size: 0.85rem;
+    align-self: center;
+}
 .review-page-btn.active {
     background: #8b3a62;
     color: #fff;

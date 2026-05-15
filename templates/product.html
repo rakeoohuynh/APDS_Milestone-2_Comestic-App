@@ -239,23 +239,39 @@ function renderPagination(totalPages) {
     container.innerHTML = '';
     if (totalPages <= 1) return;
 
-    const make = (label, page, disabled) => {
+    const makeBtn = (label, page, isActive) => {
         const btn = document.createElement('button');
-        btn.className = 'review-page-btn' + (disabled ? ' active' : '');
+        btn.className = 'review-page-btn' + (isActive ? ' active' : '');
         btn.textContent = label;
-        btn.disabled = disabled;
+        btn.disabled = isActive;
         btn.onclick = () => { currentPage = page; renderPage(); };
         return btn;
     };
 
-    if (currentPage > 1)
-        container.appendChild(make('‹ Prev', currentPage - 1, false));
+    const makeDots = () => {
+        const span = document.createElement('span');
+        span.className = 'review-page-dots';
+        span.textContent = '...';
+        return span;
+    };
 
-    for (let p = 1; p <= totalPages; p++)
-        container.appendChild(make(p, p, p === currentPage));
+    if (currentPage > 1)
+        container.appendChild(makeBtn('« Prev', currentPage - 1, false));
+
+    const pages = new Set([1, totalPages]);
+    for (let p = Math.max(1, currentPage - 2); p <= Math.min(totalPages, currentPage + 2); p++)
+        pages.add(p);
+
+    const sorted = Array.from(pages).sort((a, b) => a - b);
+    let prev = 0;
+    for (const p of sorted) {
+        if (p - prev > 1) container.appendChild(makeDots());
+        container.appendChild(makeBtn(p, p, p === currentPage));
+        prev = p;
+    }
 
     if (currentPage < totalPages)
-        container.appendChild(make('Next ›', currentPage + 1, false));
+        container.appendChild(makeBtn('Next »', currentPage + 1, false));
 }
 
 function filterReviews(label) {
@@ -299,6 +315,8 @@ function toggleReviewForm() {
 }
 
 let aiPredictionDone = false;
+
+document.addEventListener('DOMContentLoaded', renderPage);
 
 document.addEventListener('DOMContentLoaded', function(){
 

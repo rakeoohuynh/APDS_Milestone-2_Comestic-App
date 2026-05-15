@@ -1,11 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from app.logic.products import get_paginated_products, get_product_by_id, clear_products_cache
 from app.logic.reviews import get_product_reviews, append_review
 from app.logic.recommend import recommend_products
 from app.logic.ml_model import predict, build_models, save_new_review
 
 app = Flask(__name__)
-app.secret_key = 'beauty-shop-secret'
+app.secret_key = 'beauty-shop-secret-v2'
 
 print("--- Load AI Models ... ---")
 build_models()
@@ -52,17 +52,25 @@ def product_detail(product_id):
         else:
             review['ml_label'] = 1 if review['rating'] >= 4 else 0
 
-    return render_template('product.html', product=product, reviews=reviews, recommendations=recommendations)
+    is_buyer = str(product_id) in session.get('purchased', [])
+    return render_template('product.html', product=product, reviews=reviews, recommendations=recommendations, is_buyer=is_buyer)
 
-# TODO: GET /product/<product_id>/checkout
-#   - fetch product by id, redirect to index if not found
-#   - render checkout.html with product
+@app.route('/product/<product_id>/checkout', methods=['GET'])
+def checkout(product_id):
+    product = get_product_by_id(product_id)
+    if not product:
+        return redirect(url_for('index'))
+    return render_template('checkout.html', product=product)
 
-# TODO: POST /product/<product_id>/checkout
-#   - validate form fields: full_name, email, address, quantity
-#   - if valid: add product_id to session['purchased'] list, set session.modified = True
-#   - flash 'Order placed! You can now leave a verified review.' success
-#   - redirect to product_detail
+@app.route('/product/<product_id>/checkout', methods=['POST'])
+def place_order(product_id):
+    purchased = session.get('purchased', [])
+    if str(product_id) not in purchased:
+        purchased.append(str(product_id))
+        session['purchased'] = purchased
+        session.modified = True
+    flash('Order placed! You can now leave a verified review.', 'success')
+    return redirect(url_for('product_detail', product_id=product_id))
 
 @app.route('/api/predict_label', methods=['POST'])
 def api_predict():
@@ -89,7 +97,8 @@ def add_review(product_id):
         flash('Please fill in all fields.', 'error')
         return redirect(url_for('product_detail', product_id=product_id))
 
-    ok = append_review(product_id, author, rating, title, text)
+    is_buyer = str(product_id) in session.get('purchased', [])
+    ok = append_review(product_id, author, rating, title, text, is_buyer)
 
     if ok:
         clear_products_cache()

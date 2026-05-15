@@ -179,42 +179,22 @@ def predict(review_text, rating=3):
 
     return 1 if final_score >= 0.7 else 0
     
-def save_new_review(product_id, review_title, review_text, author, rating, final_label, review_date = None):
+def save_new_review(product_id, review_title, review_text, author, rating, final_label, review_date=None):
     """
     Saves the user-validated (or overridden) review into a feedback CSV file.
     This data can be used for future model retraining (Human-in-the-loop).
     """
-    product = get_product_by_id(str(product_id))
-    if not product:
-        product = {}
+    new_review = pd.DataFrame([{
+        "product_id":    str(product_id),
+        "review_title":  review_title,
+        "review_text":   review_text,
+        "author":        author,
+        "review_rating": rating,
+        "is_a_buyer":    final_label
+    }])
 
-    if not review_date:
-        review_date = datetime.now().strftime('%d/%m/%Y %H:%M')
-    
-    full_row = {
-        "product_id":           str(product_id),
-        "brand_name":           product.get('brand', ''),
-        "review_id":            f"fb_{int(datetime.now().timestamp())}",
-        "review_title":         review_title,
-        "review_text":          review_text,
-        "author":               author,
-        "review_date":          review_date,
-        "review_rating":        rating,
-        "is_a_buyer":           final_label,
-        "product_title":        product.get('name', ''),
-        "price":                product.get('price', ''),
-        "avg_product_rating":   product.get('rating', ''),
-        "product_rating_count": product.get('rating_count', ''),
-        "product_tags":         product.get('tags', ''),
-        "product_url":          product.get('url', '')
-    }
-
-    # Append to file without rewriting headers
     file_path = DATA_DIR / "test_feedback.csv"
     file_exists = file_path.exists()
-
-    new_review = pd.DataFrame([full_row])
-    
     new_review.to_csv(file_path, mode="a", header=not file_exists, index=False)
 
 if __name__ == "__main__":
