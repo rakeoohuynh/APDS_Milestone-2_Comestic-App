@@ -7,7 +7,7 @@ from app.logic.ml_model import predict, build_models, save_new_review
 app = Flask(__name__)
 app.secret_key = 'beauty-shop-secret-v2'
 
-print("--- Load AI Models ... ---")
+# print("--- Load AI Models ... ---")
 build_models()
 
 @app.route('/')
