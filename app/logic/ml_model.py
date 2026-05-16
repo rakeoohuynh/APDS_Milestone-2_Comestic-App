@@ -145,39 +145,45 @@ def get_single_weighted_vector(text):
             review_vec += weight * word_vec
     return review_vec
 
-def predict(review_text, rating=3):
+def predict_with_confidence(review_text, rating=3):
     """
     Final Fusion Model: Combines probabilities from all three models.
-    Returns 1 (Buyer) if the average probability >= 0.5, else 0 (Non-buyer).
+    Returns a tuple (label, confidence) where:
+      - label      : 1 (Buyer) or 0 (Non-buyer), threshold >= 0.7
+      - confidence : raw final_score as a float in [0, 1]
     """
     global count_vec, lr_model, rf_model, rating_model
     if count_vec is None:
         build_models()
 
-    # Preprocess text 
+    # Preprocess text
     text = preprocess_text(review_text)
-    
-    # 1. Get Probability from Model 1 
+
+    # 1. Get Probability from Model 1
     vec_count = count_vec.transform([text])
     pred_lr = lr_model.predict_proba(vec_count)[0][1]
 
-    # 2. Get Probability from Model 2 
+    # 2. Get Probability from Model 2
     vec_weighted = get_single_weighted_vector(text).reshape(1, -1)
     pred_rf = rf_model.predict_proba(vec_weighted)[0][1]
 
-    # 3. Get Probability from Model 3 
+    # 3. Get Probability from Model 3
     pred_rating = rating_model.predict_proba([[rating]])[0][1]
 
-    # # Print debug to check which model predicted wrong
-    # print(f"LR (Keyword): {pred_lr:.4f}")
-    # print(f"RF (Semantic): {pred_rf:.4f}")
-    # print(f"GNB (Rating): {pred_rating:.4f}")
-    
-    # Calculate Final Score 
+    # Calculate Final Score
     final_score = (pred_lr * 0.45) + (pred_rf * 0.45) + (pred_rating * 0.1)
-    # print(f"FINAL SCORE: {final_score:.4f}")
 
-    return 1 if final_score >= 0.7 else 0
+    label = 1 if final_score >= 0.7 else 0
+    return label, float(final_score)
+
+
+def predict(review_text, rating=3):
+    """
+    Final Fusion Model: Combines probabilities from all three models.
+    Returns 1 (Buyer) if the average probability >= 0.7, else 0 (Non-buyer).
+    """
+    label, _ = predict_with_confidence(review_text, rating)
+    return label
     
 def save_new_review(product_id, review_title, review_text, author, rating, final_label, review_date=None):
     """
