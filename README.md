@@ -60,6 +60,7 @@ http://127.0.0.1:5000
 - **Product detail:** Click any product card to view details, reviews, and similar product recommendations.
 - **Add a review:** Click `+ Add Review` on a product page. After filling in the form and clicking Submit, the AI model classifies the review as **Buy** or **Not Buy**. You may override the label before confirming.
 - **Buy Now:** Click `Buy Now` on a product page to go to the checkout form.
+-**Rating filter:** In the review section has a drop down to filter out high rating/low rating reviews.
 - **Admin Dashboard:** Click `Admin Login` in the top-right corner of the home page, or navigate to `http://127.0.0.1:5000/admin/login`
   - **Password:** `admin123`
 
