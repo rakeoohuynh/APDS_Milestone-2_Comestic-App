@@ -65,6 +65,7 @@ FEATURES WALKTHROUGH
       confirming.
     - Buy Now: click "Buy Now" on a product page to go to the checkout
       form.
+    - Rating filter: In the review section há a drop dơn to filter out high rating/ low rating reviews.
     - Admin Dashboard: click "Admin Login" in the top-right corner of
       the home page, or go to http://127.0.0.1:5000/admin/login
       Password: admin123
